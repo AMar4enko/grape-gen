@@ -1,0 +1,132 @@
+require 'rubygems'
+require 'spork'
+require 'rack/test'
+require 'rack/test/methods'
+require 'rspec'
+require 'rspec_api_documentation'
+<% if @mandrill %>
+require 'mandrill_mailer/offline'
+<% end %>
+RACK_ENV = 'test' unless defined?(RACK_ENV)
+
+class TestApiClient < RspecApiDocumentation::RackTestClient
+  def response_body
+    body = JSON.load(last_response.body)
+    case body
+      when Array
+        body.map!{|item| Hashie::Mash.new(item) }
+      else
+        body
+    end
+  end
+
+  def response; last_response end
+end
+
+module RspecApiDocumentation::DSL
+  module Resource
+    def client
+      @client ||= TestApiClient.new(self)
+    end
+  end
+end
+
+Spork.prefork do
+  require File.expand_path(File.dirname(__FILE__) + '/../config/boot_spec')
+  require 'database_cleaner'
+  <% if @sidekiq %>
+  Sidekiq::Testing.fake!
+  <% end %>
+  <% if @faye %>
+  FayePublisher.fake!
+  <% end %>
+
+  <% if @dev_reload %>
+  Grape::RackBuilder.setup do
+    force_reloading true
+  end
+  <% end %>
+
+  RspecApiDocumentation.configure do |config|
+    config.app = RACK_APPLICATION
+  end
+
+  RSpec.configure do |conf|
+    FactoryGirl.reload
+
+    DatabaseCleaner.orm = :mongoid
+    DatabaseCleaner.strategy = :truncation
+
+    conf.include Rack::Test::Methods
+
+    conf.around(:each) do |example|
+      Logging.mdc.clear
+      SearchIndex.create_indexes!
+      DatabaseCleaner.cleaning { example.run }
+      Logging.mdc.clear
+    end
+  end
+
+  def app(app = nil, &blk)
+    @app ||= block_given? ? app.instance_eval(&blk) : app
+    @app ||= RACK_APPLICATION
+  end
+
+  RSpec::Matchers.define :succeed do |valid_codes = nil|
+    match do |*args|
+      case valid_codes
+        when Integer
+          actual.status == valid_codes
+        when Array
+          valid_codes.include?(actual.status)
+        else
+          (actual.status == 200) || (actual.status == 201)
+      end
+    end
+
+    match_when_negated do |*args|
+      case valid_codes
+        when Integer
+          actual.status == valid_codes
+        when Array
+          valid_codes.include?(actual.status)
+        else
+          actual.status > 201
+      end
+    end
+
+    failure_message do |actual|
+      case valid_codes
+        when Integer
+          "expected that #{actual} succeed with code #{valid_codes}, but got #{actual.status} error:\n#{actual.body}"
+        when Array
+          "expected that #{actual} succeed with one of #{valid_codes}, but got #{actual.status} error:\n#{actual.body}"
+        else
+          "expected that #{actual} succeed, but got #{actual.status} error:\n#{actual.body}"
+      end
+    end
+
+    failure_message_when_negated do |actual|
+      case valid_codes
+        when Integer
+          "expected that #{actual} fails with code #{valid_codes}, but got #{actual.status} error:\n#{actual.body}"
+        when Array
+          "expected that #{actual} fails with one of #{valid_codes}, but got #{actual.status} error:\n#{actual.body}"
+        else
+          "expected that #{actual} fails, but got #{actual.status} error:\n#{actual.body}"
+      end
+    end
+
+    description do
+      'respond with 200 or 201 status code'
+    end
+  end
+end
+
+class Spork::Forker
+  alias_method :_initialize, :initialize
+  def initialize(*args, &block)
+    Grape::Reload::Watcher.reload!
+    _initialize(*args, &block)
+  end
+end

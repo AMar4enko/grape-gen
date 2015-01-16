@@ -1,0 +1,85 @@
+# Defines our constants
+RACK_ENV = ENV['RACK_ENV'] || 'development' unless defined?(RACK_ENV)
+APP_ROOT = File.expand_path('../..', __FILE__) unless defined?(APP_ROOT)
+
+# Load our dependencies
+require 'rubygems' unless defined?(Gem)
+require 'bundler/setup'
+require 'yaml'
+
+# Load initializers
+Bundler.require(
+    :framework,
+    :db,
+<% if @sidekiq -%>
+    :sidekiq,
+<% end -%>
+<% if @mandrill -%>
+    :mailer,
+<% end -%>
+    :utils,
+<% if @es -%>
+    :elastic_search,
+<% end -%>
+    :eventmachine,
+    :rack_server,
+    RACK_ENV
+)
+
+require_relative 'settings'
+
+ApplicationSettings.source File.expand_path('config/application.yml', APP_ROOT)
+ApplicationSettings.root = APP_ROOT
+
+require_relative 'database'
+
+Dir[ApplicationSettings.root('config/initializers/em-patches/*.rb')].each {|initializer| require initializer}
+Dir[ApplicationSettings.root('config/initializers/*.rb')].each {|initializer| require initializer}
+
+
+REDIS_CONNECTION = RedisLazyEvaluatedPool.pool_with_config(ApplicationSettings.redis)
+
+<% if @dev_reload %>
+RACK_APPLICATION = Grape::RackBuilder.setup do
+  %w{api models lib uploaders models abilities jobs search_indexes mailers}.each do |path|
+    add_source_path ApplicationSettings.root("#{path}/**/*.rb")
+    add_source_path ApplicationSettings.root("#{path}/*.rb")
+  end
+  
+  use Warden::Manager do |config|
+    config.strategies.add(:access_token, TokenStrategy)
+    config.default_strategies :access_token
+    config.failure_app = API::Application
+    config.intercept_401 = false
+  end
+  
+  use Rack::Config do |env|
+    env['api.tilt.root'] = ApplicationSettings.root('views')
+  end
+  
+  mount 'API::Application', to: '/api'
+  
+  logger Logging.logger[:rackbuilder]
+end.boot!.application
+<% else %>
+%w{lib models uploaders models abilities jobs search_indexes mailers api}.each do |path|
+  Dir[ApplicationSettings.root("#{path}/**/*.rb")].each {|f| require f}
+end
+    
+RACK_APPLICATION = Rack::Builder.new do
+  use Warden::Manager do |config|
+    config.strategies.add(:access_token, TokenStrategy)
+    config.default_strategies :access_token
+    config.failure_app = API::Application
+    config.intercept_401 = false
+  end
+  
+  use Rack::Config do |env|
+    env['api.tilt.root'] = ApplicationSettings.root('views')
+  end
+  
+  map '/api' do
+    run API::Application
+  end
+end
+<% end %>

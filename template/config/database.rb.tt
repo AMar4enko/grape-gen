@@ -1,0 +1,6 @@
+<%- case @orm
+ when 'mongoid' -%>
+Mongoid.load!(ApplicationSettings.root('config', 'database.yml'), RACK_ENV)
+Mongoid.logger = Logging.logger[:database]
+Moped.logger = Logging.logger[:database]
+<%- end -%>

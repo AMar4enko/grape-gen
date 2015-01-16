@@ -1,0 +1,95 @@
+source 'https://rubygems.org'
+
+# Web frameworks related
+group :framework do
+  gem 'grape', '~> 0.10'
+<%- if @dev_reload -%>
+  gem 'grape-reload', github: 'AlexYankee/grape-reload'
+<%- end -%>
+  gem 'warden', '~> 1.2.3'
+  gem 'grape-jbuilder', '~> 0.2.0'
+  gem 'jbuilder', '~> 2.2.5'
+  gem 'rack-cors', '~> 0.2.9'
+end
+# ORM
+group :db do
+<%- case @orm
+  when 'mongoid' -%>
+  gem 'mongoid', '~> 4.0.0'
+  gem 'mongoid-paranoia', '~> 1.0.0'
+  <%- if @carrierwave -%>
+  gem 'carrierwave-mongoid', '~> 0.7.1'
+  <%- end -%>
+<%- else -%>
+<%- end -%>
+<%- if @carrierwave -%>
+  gem 'carrierwave', '~> 0.10.0'
+  gem 'mini_magick', '~> 4.0.2'
+<%- end -%>
+  gem 'workflow', '~> 1.2.0'
+end
+<% if @sidekiq -%>
+# Background job
+group :sidekiq do
+  gem 'sidekiq', '~> 3.2.6'
+  gem 'sidekiq-middleware', '~> 0.3.0'
+  gem 'sidekiq-scheduler', github: 'preplay/sidekiq-scheduler', ref: '4b8abd1f256ff3e577a666c181437bd5f4590438'
+end
+<% end -%>
+<%- if @mandrill -%>
+# Mailing
+group :mailer do
+  gem 'mandrill_mailer', '~> 0.5.1'
+end
+<%- end -%>
+# Utils
+group :utils do
+  gem 'settingslogic', '~> 2.0.9'
+  gem 'logging', '~> 1.8.2'
+  gem 'bcrypt', '~> 3.1.7'
+  gem 'cancancan', '~> 1.9.2'
+  gem 'hashie', '~> 3.3.2'
+  gem 'activesupport', '~> 4.2'
+  gem 'multi_json', '~> 1.10.1'
+  gem 'oj', '~> 2.11.2'
+end
+<%- if @es -%>
+# ElasticSearch
+group :elastic_search do
+  gem 'tire', '~> 0.6.2'
+  gem 'faraday', '~> 0.9.1'
+end
+<%- end -%>
+group :eventmachine do
+<%- if @redis -%>
+  gem 'em-hiredis'
+<%- end -%>
+  gem 'em-synchrony', github: 'igrigorik/em-synchrony'
+end
+<%- if @faye -%>
+group :faye do
+  gem 'faye', '~> 1.0.1'
+<%- if @redis -%>
+  gem 'faye-redis'
+<%- end -%>
+end
+<%- end -%>
+# Server
+group :rack_server do
+  gem 'thin', '~> 1.6.3'
+  gem 'rake', '~> 10.3.2'
+  gem 'rack-fiber_pool', '~> 0.9.1'
+end
+group :test do
+  gem 'rack-test', '~> 0.6.3'
+  gem 'database_cleaner', '~> 1.3.0'
+  gem 'faker', '~> 1.4.3'
+  gem 'factory_girl', '~> 4.5.0'
+  gem 'guard', '~> 2.6.1'
+  gem 'guard-spork', '~> 1.5.1'
+  gem 'guard-rspec', '~> 4.3.1'
+  gem 'rspec', '~> 3.1.0'
+  gem 'spork', github: 'manafire/spork', branch: 'rspec3_runner'
+  gem 'terminal-notifier-guard', '~> 1.5.3'
+  gem 'rspec_api_documentation', '~> 4.3.0'
+end

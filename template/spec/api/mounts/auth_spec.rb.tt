@@ -1,0 +1,37 @@
+require 'spec_helper'
+require 'rspec_api_documentation/dsl'
+
+resource 'Authorization', focus: true do
+  <% if @mandrill %>
+  before(:each) { MandrillMailer.deliveries.clear }
+  <% end %>
+  post '/api/auth/register' do
+    example 'New user registration' do
+      new_user = FactoryGirl.attributes_for(:user).pick(:display_name, :email)
+
+      do_request(new_user)
+      expect(client.response).to succeed
+      <% if @mandrill %>
+      email = MandrillMailer::deliveries.detect { |mail|
+        mail.template_name == 'registration' &&
+            mail.message['to'].any? { |to| to['email'] == new_user[:email] }
+      }
+      <% end %>
+      expect(email).to_not be_nil
+    end
+  end
+
+  post '/api/auth/approve_email' do
+    example 'User email activation' do
+      user = FactoryGirl.create(:user)
+      user.generate_approvement_code!
+      user.save!
+      do_request(email: user.email, email_approvement_code: user.email_approvement_code)
+      expect(client.response).to succeed
+      expect(response_body).to include('display_name', 'email')
+      <% if @faye %>
+      expect(FayePublisher.publishings.length).to eq(1)
+      <% end %>
+    end
+  end
+end

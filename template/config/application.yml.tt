@@ -1,0 +1,33 @@
+development: &dev
+  api_root: http://localhost:9292/api
+<% if @redis -%>
+  redis:
+    url: redis://localhost:6379/0
+    size: 20
+<% end -%>
+<% if @mandrill -%>
+  mandrill:
+    api_key: your_mandrill_key
+<% end -%>
+<% if @es -%>
+  elasticsearch:
+    url: http://localhost:9200
+<% end -%>
+<% if @faye -%>
+  faye:
+    server_secret: <%= @faye_secret %>
+    redis:
+      url: redis://localhost:6379/0
+      namespace: faye
+      size: 20 # Pool size
+<% end -%>
+<% if @sidekiq %>
+  sidekiq:
+    redis:
+      url: redis://localhost:6379/0
+      size: 20 # Pool size
+<% end %>
+
+production: *dev
+test:
+  api_root: http://localhost/api

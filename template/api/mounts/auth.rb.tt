@@ -1,0 +1,42 @@
+module API
+  module Mounts
+    class Auth < Grape::API
+      params do
+        requires :display_name, type: String
+        requires :email, type: String
+      end
+      post :register do
+        params[:email] = params[:email].downcase
+        user = Models::User.where(email: params[:email]).first
+        if user
+          error! :waiting_for_approvement if user.registered?
+          error! :already_exists, 400
+        end
+
+        user = Models::User.register(declared(params, include_missing: false))
+
+      <%- if @mandrill -%>
+        begin
+          RegistrationMailer.registered(user).deliver
+        rescue
+          logger.error $!
+        end
+      <%- end -%>
+      end
+
+      params do
+        requires :email, type: String
+        requires :email_approvement_code, type: String
+      end
+      post :approve_email, jbuilder: 'v1/user/profile.json' do
+        @user = Models::User.find_by(email: params[:email].downcase, email_approvement_code: params[:email_approvement_code])
+        @user.email_approved!
+        @user.save
+        header['X-Authorize'] = @user.token
+        <% if @faye %>
+        FayePublisher.publish('/user/registered', {display_name: @user.display_name})
+        <% end %>
+      end
+    end
+  end
+end

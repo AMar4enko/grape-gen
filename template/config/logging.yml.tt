@@ -1,0 +1,39 @@
+development: &dev
+  # Autoflush logs after 100 messages
+  auto_flushing: 1
+  # Flush logs each N seconds, empty to disable
+  flush_period:
+  # Log all levels by default
+  level: :debug
+  # Root appenders
+  appenders:
+    stdout: true
+
+production:
+  # Flush logs each N seconds, empty to disable
+  flush_period: 3
+  immediate_at:
+      - :exception
+      - :error
+      - :fatal
+  level: :fatal
+
+  routes:
+    database:
+      additive: false
+      level: :debug
+      appenders:
+        default:
+          type: rolling_file
+          filename: log/database.log
+    <% if @faye %>
+    faye:
+      additive: false
+      level: :debug
+      appenders:
+        default:
+          type: rolling_file
+          filename: log/faye.log
+    <% end %>
+
+test: *dev

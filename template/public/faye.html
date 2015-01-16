@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <link rel="stylesheet" href="style.css" />
+    <!--[if IE]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+    <script src="http://localhost:9393/faye/client.js"></script>
+
+    <script type="text/javascript">
+
+
+        $(function(){
+            var $body = $('body'), client = new Faye.Client('http://localhost:9393/faye/');
+
+            function subscriptionActive(subscription){
+                $body.append('<p>Subscription active '+ subscription +'</p>');
+            }
+
+            client.subscribe('/time', function(data){
+                $body.prepend('<p>Current time is '+ data +'</p>');
+            }).then(subscriptionActive.bind(null, '/time'));
+
+            client.subscribe('/user/registered', function(data){
+                $body.prepend('<p>Please, welcome '+ data.display_name +'</p>');
+            }).then(subscriptionActive.bind(null, '/user/registered'));
+        });
+    </script>
+</head>
+<body>
+
+</body>
+</html>

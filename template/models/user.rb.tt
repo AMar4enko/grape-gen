@@ -1,0 +1,75 @@
+module Models
+  class User
+    include Mongoid::Document
+    include Mongoid::Timestamps
+    include Mongoid::Paranoia
+  <%- if @es -%>
+    include Mongoid::TirePlugin
+  <%- end -%>
+    include BCrypt
+    include Workflow
+
+    field :display_name, type: String
+    field :email_submit_code, type: String
+    field :email
+    field :password_hash, type: String
+    field :role, type: Symbol, default: :guest
+    field :banned, type: Boolean
+    field :banned_at, type: DateTime
+    field :email_approvement_code, type: String
+    field :workflow_state, type: String, default: 'registered'
+    field :token, type: String
+
+    validates_presence_of :display_name, :email, :role
+    validates_uniqueness_of :email
+  <%- if @carrierwave-%>
+    mount_uploader :avatar, Uploaders::Avatar
+  <%- end -%>
+    workflow do
+      state :registered do
+        event :email_approved, transition_to: :approved
+      end
+
+      state :approved do
+        event :ban, transition_to: :banned
+      end
+
+      state :banned do
+        event :unban, transition_to: :approved
+      end
+    end
+
+    def email_approved
+      self.email_approvement_code = nil
+      self.generate_token!
+    end
+
+    def password=(value)
+      @password = Password.create(value)
+      self.password_hash = @password
+    end
+
+    def password
+      @password ||= Password.new(self.password_hash)
+    end
+
+    def generate_approvement_code!
+      hash_source = '%s-%s-%s'%[self.email, self.display_name, Time.now]
+      self.email_approvement_code = BCrypt::Password.create(hash_source, cost: 3).to_s[8..-1]
+    end
+
+    def generate_token!
+      hash_source = '%s-%s-%s'%[self.email, self.display_name, Time.now]
+      self.token = BCrypt::Password.create(hash_source, cost: 3).to_s[8..-1]
+    end
+
+    class << self
+      def register(fields)
+        user = new(fields)
+        user.generate_approvement_code!
+        user.save!
+        user
+      end
+    end
+  end
+end

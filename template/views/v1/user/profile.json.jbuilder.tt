@@ -1,0 +1,4 @@
+json.(@user, :display_name, :email)
+<% if @carrierwave %>
+json.set! :avatar, @user.avatar.url if @user.avatar?
+<% end %>

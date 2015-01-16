@@ -1,0 +1,24 @@
+module API
+  module Mounts
+    class Profile < Grape::API
+      before {
+        @user = current_user
+        authorize! :update_profile, @user
+      }
+      params do
+        optional :display_name
+        <% if @carrierwave %>
+        optional :avatar
+        optional :remove_avatar
+        mutually_exclusive :avatar, :remove_avatar
+        <% end %>
+      end
+      put jbuilder: 'v1/user/profile.json' do
+        declared(params, include_missing: false).each {|k,v| @user.send("#{k}=", v) }
+        @user.save!
+      end
+
+      get jbuilder: 'v1/user/profile.json'
+    end
+  end
+end

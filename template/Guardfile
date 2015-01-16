@@ -1,0 +1,20 @@
+notification :terminal_notifier
+
+guard 'spork', rspec_env: { 'RACK_ENV' => 'test' } do
+  watch('config/.+\.rb')
+  watch('Gemfile.lock')
+  watch(%r{^spec/factories/.+\.rb$})
+  watch('spec/spec_helper.rb') { :rspec }
+end
+
+guard :rspec, cmd: 'bundle exec rspec --drb --color --format progress' do
+  watch(%r{^spec/.+_spec\.rb$})
+  watch(%r{^lib/(.+)\.rb$})     { |m| "spec/lib/#{m[1]}_spec.rb" }
+  watch('spec/spec_helper.rb')  { "spec" }
+
+  watch(%r{^api/mounts/(.+)\.rb$})  { |m| "spec/api/mounts/#{m[1]}_spec.rb" }
+  watch(%r{^models/(.+)\.rb$})      { |m| "spec/models/#{m[1]}_spec.rb" }
+  watch(%r{^abilities/(.+)\.rb$})    { |m| "spec/abilities/#{m[1]}_spec.rb" }
+  watch(%r{^views/(v[^/]+)/\.rb$})   { |m| "spec/api/**/*.rb" }
+end
+

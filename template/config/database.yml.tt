@@ -1,0 +1,21 @@
+development: &dev
+  sessions:
+    default:
+      database: <%= @app_name %>
+      hosts:
+        - 127.0.0.1
+
+      options:
+        pool_size: 100
+
+production: *dev
+
+test:
+  sessions:
+    default:
+      database: <%= @app_name %>_test
+      hosts:
+        - 127.0.0.1
+
+      options:
+        pool_size: 100

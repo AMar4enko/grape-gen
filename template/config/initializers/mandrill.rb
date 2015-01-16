@@ -1,0 +1,1 @@
+MandrillMailer.config.api = ApplicationSettings.mandrill.api_key

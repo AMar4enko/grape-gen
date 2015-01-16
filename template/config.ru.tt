@@ -1,0 +1,8 @@
+#!/usr/bin/env rackup -s thin
+require_relative 'config/boot'
+
+use Rack::Static, urls: {'/faye' => 'faye.html'}, root: 'public'
+
+use Rack::FiberPool, size: 50
+
+run RACK_APPLICATION

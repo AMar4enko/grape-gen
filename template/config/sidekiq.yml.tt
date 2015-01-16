@@ -1,0 +1,22 @@
+---
+:concurrency: 3
+:pidfile: tmp/pids/sidekiq.pid
+development:
+:concurrency: 3
+production:
+:concurrency: 3
+:queues:
+- default
+:schedule:
+#  'DelayedJobs::YourJob':
+#    every: 10s
+#    queue: default
+#    description: Sample job schedule
+<% if @faye %>
+  'DelayedJobs::PongTime':
+    every: 5s
+    queue: default
+    description: Notify connected faye users about current time
+<% end %>
+
+

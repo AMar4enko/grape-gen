@@ -1,0 +1,33 @@
+# Load our dependencies
+require 'rubygems' unless defined?(Gem)
+require 'bundler/setup'
+
+Bundler.require(:utils, :db)
+Bundler.require(
+    :sidekiq,
+<% if @mandrill -%>
+    :mailer,
+<% end -%>
+<% if @es -%>
+    :elastic_search,
+<% end -%>
+)
+
+# Defines our constants
+RACK_ENV = Sidekiq.options[:environment] || ENV['RACK_ENV'] || :development
+APP_ROOT = File.expand_path('../..', __FILE__) unless defined?(APP_ROOT)
+Bundler.require(RACK_ENV)
+
+require 'warden'
+
+require_relative 'settings'
+
+ApplicationSettings.source File.expand_path('config/application.yml', APP_ROOT)
+ApplicationSettings.root = APP_ROOT
+
+# Load initializers
+Dir[ApplicationSettings.root('config/initializers/*.rb')].each {|file_name| require file_name}
+
+%w{lib jobs uploaders models search_indexes}.each do |path|
+  Dir[ApplicationSettings.root("#{path}/**/*.rb")].each {|f| require f}
+end
