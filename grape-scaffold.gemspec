@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ['AMar4enko']
   spec.email         = ['amar4enko@gmail.com']
   spec.summary       = %q{Grape-powered rack application generator with batteries included}
-  spec.homepage      = ''
+  spec.homepage      = 'https://github.com/AlexYankee/grape-gen'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0")
