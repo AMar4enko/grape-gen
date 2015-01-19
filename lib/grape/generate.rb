@@ -43,9 +43,6 @@ module Grape
 
         directory './', exclude_pattern: /(sidekiq|carrierwave|faye|mandrill|tire|elastic_search|search_indexes|mailers|uploaders|jobs)/
 
-        directory './log'
-        directory './tmp/pids'
-
         @redis ||= @sidekiq || @faye
 
         if @faye
@@ -54,8 +51,7 @@ module Grape
           copy_file './config/initializers/faye.rb'
           copy_file './config/initializers/em-patches/faye.rb'
           copy_file './public/faye.html'
-          copy_file './lib/faye_auth_extension.rb'
-          copy_file './lib/faye_publisher.rb'
+          directory './lib/faye'
         end
 
         if @sidekiq

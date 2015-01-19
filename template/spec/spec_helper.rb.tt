@@ -7,7 +7,12 @@ require 'rspec_api_documentation'
 <% if @mandrill %>
 require 'mandrill_mailer/offline'
 <% end %>
+
 RACK_ENV = 'test' unless defined?(RACK_ENV)
+
+%w{patches}.each do |path|
+  Dir[File.expand_path('patches/**/*.rb', File.dirname(__FILE__))].each {|f| require f}
+end
 
 class TestApiClient < RspecApiDocumentation::RackTestClient
   def response_body

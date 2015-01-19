@@ -5,7 +5,7 @@ module DelayedJobs
     sidekiq_options unique: true
 
     def perform
-      FayePublisher.publish('/time',Time.now.utc.to_s)
+      Faye::Publisher.instance.publish('/time',Time.now.utc.to_s)
     end
   end
 end

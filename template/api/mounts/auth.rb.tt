@@ -34,7 +34,7 @@ module API
         @user.save
         header['X-Authorize'] = @user.token
         <% if @faye %>
-        FayePublisher.publish('/user/registered', {display_name: @user.display_name})
+        Faye::Publisher.instance.publish('/user/registered', {display_name: @user.display_name})
         <% end %>
       end
     end

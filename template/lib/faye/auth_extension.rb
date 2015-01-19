@@ -1,4 +1,4 @@
-require_relative 'warden/token_strategy'
+require_relative '../warden/token_strategy'
 
 module Faye
   class AuthExtension

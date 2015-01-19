@@ -1,3 +1,5 @@
-require_relative '../../lib/faye_publisher'
+require_relative '../../lib/faye/publisher'
 
-FayePublisher.redis = ApplicationSettings.faye.redis unless FayePublisher.configured?
+Faye::Publisher.configure do |config|
+  config.redis = ApplicationSettings.faye.redis unless Faye::Publisher.configured?
+end

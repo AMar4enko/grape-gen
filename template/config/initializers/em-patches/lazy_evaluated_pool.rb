@@ -14,7 +14,7 @@ class LazyEvaluatedPool < EventMachine::Synchrony::ConnectionPool
   private
   def acquire(fiber)
     if conn = @available.pop
-      conn = self.instance_eval(&conn) if conn.respond_to?(:call)
+      conn = conn.call(@config) if conn.respond_to?(:call)
       @reserved[fiber.object_id] = conn
       conn
     else
@@ -26,7 +26,7 @@ class LazyEvaluatedPool < EventMachine::Synchrony::ConnectionPool
   class << self
     def pool_with_config(config, &block)
       config[:size] ||= 10
-      LazyEvaluatedPool.new(config, &(block || connection))
+      new(config, &(block || connection))
     end
     private
     def connection; raise 'Please, override connection method or supply block' end

@@ -18,5 +18,5 @@ ApplicationSettings.source File.expand_path('config/application.yml', APP_ROOT)
 ApplicationSettings.root = APP_ROOT
 
 require_relative 'initializers/logging'
-require_relative '../lib/faye_auth_extension'
-require_relative '../lib/faye_publisher'
+require_relative '../lib/faye/auth_extension'
+require_relative '../lib/faye/publisher'

@@ -52,6 +52,7 @@ group :utils do
   gem 'activesupport', '~> 4.2'
   gem 'multi_json', '~> 1.10.1'
   gem 'oj', '~> 2.11.2'
+  gem 'redis-namespace', '~> 1.5.1'
 end
 <%- if @es -%>
 # ElasticSearch

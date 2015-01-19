@@ -1,3 +1,5 @@
+require 'mandrill'
+
 # Patch mandrill API to play ball with EventMachine
 module Mandrill
   class API
