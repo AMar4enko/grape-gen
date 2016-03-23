@@ -1,5 +1,5 @@
-require 'grape/generate/version'
-require 'bundler/vendor/thor'
+require_relative 'generate/version'
+require 'thor'
 require 'digest'
 
 module Grape
