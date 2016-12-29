@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
 
-require 'grape/generate'
+require_relative '../lib/grape/generate'
 
 Grape::Generate::CLI.start(ARGV)
